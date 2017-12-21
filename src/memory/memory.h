@@ -1,4 +1,6 @@
-#include "src/memory.h"
+#ifdef USE_QUAD
+#endif
+#ifdef USE_DOUBLE
+#endif
 
-
-void init_mapping()
+extern void init_memory()
