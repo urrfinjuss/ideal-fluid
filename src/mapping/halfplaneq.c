@@ -1,6 +1,6 @@
-#include "fffluid.h"
+#include "fffluidq.h"
 
 void fffluid_halfplane() {
   printf("Module Loaded:\tDummy Half-Plane\t");
-  printf("Default precision:\tdouble\n");
+  printf("Default precision:\t__float128\n");
 }

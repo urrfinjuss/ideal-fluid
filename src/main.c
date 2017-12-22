@@ -1,11 +1,14 @@
 #include <config.h>
-#include "src/header.h"
-#include "src/mapping/mapping.h"
+#ifdef USE_QUAD
+#include "fffluidq.h"
+#else
+#include "fffluid.h"
+#endif
 
 int main (void)
 {
   printf("This is %s\n", PACKAGE_STRING);
-  dummy_disk();
-  dummy_halfplane();
+  fffluid_disk();
+  fffluid_halfplane();
   return 0;
 }
