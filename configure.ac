@@ -4,11 +4,13 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AM_SILENT_RULES([yes])
 AC_PROG_CC
 AC_CHECK_LIB([fftw3],[fftw_malloc],[],[AC_MSG_ERROR([FFTW not installed])])
+AC_CHECK_LIB([m],[pow],[],[AC_MSG_ERROR([Could not find pow])])
 AC_CONFIG_HEADERS([src/headers/config.h])
 AC_CONFIG_FILES([
 src/Makefile
 Makefile
 ])
+
 # enable debugging
 AC_ARG_ENABLE([debug], 
   [AS_HELP_STRING([--enable-debug], [enable debug messages])],

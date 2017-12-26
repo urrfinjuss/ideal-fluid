@@ -1,14 +1,22 @@
-#include <config.h>
+#include "config.h"
 #ifdef USE_QUAD
-#include "fffluidq.h"
+#include "ffluidq.h"
+//#include "ffluidq/ffluidq_mapping.h"
 #else
-#include "fffluid.h"
+#include "ffluid.h"
+//#include "ffluid/ffluid_mapping.h"
 #endif
 
-int main (void)
-{
-  printf("This is %s\n", PACKAGE_STRING);
-  fffluid_disk();
-  fffluid_halfplane();
+sim_data Data;
+evolve_params Evolve_Config;
+
+int main (int argc, char **argv) {
+  data_ptr Data_Ptr = &Data; 
+  ffluid_read_cl_arguments(argc, argv);
+  
+  ffluid_disk();
+  ffluid_halfplane();
+  
+  ffluid_init_data(Data_Ptr);
   return 0;
 }
