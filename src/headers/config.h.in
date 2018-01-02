@@ -9,6 +9,12 @@
 /* Define to 1 if you have the `fftw3q' library (-lfftw3q). */
 #undef HAVE_LIBFFTW3Q
 
+/* Define to 1 if you have the `m' library (-lm). */
+#undef HAVE_LIBM
+
+/* Define to 1 if you have the `quadmath' library (-lquadmath). */
+#undef HAVE_LIBQUADMATH
+
 /* Name of package */
 #undef PACKAGE
 
