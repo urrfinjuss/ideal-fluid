@@ -1,8 +1,6 @@
 /* declared in memory/memory.c */
 extern void ffluid_memory_module();
-extern void ffluid_init_data();
-extern void ffluid_init_grid(data_ptr in, grid_ptr out);
-extern void ffluid_reinit_grid(data_ptr in, grid_ptr out);
-/* undeclared */
-extern void allocate_data(data_ptr in);
-extern void deallocate_data(data_ptr in);
+extern void ffluid_init_data(data_ptr in);
+extern void ffluid_alloc_aux_array(aux_data_ptr in, unsigned long NArrays, unsigned long NElements);
+extern void ffluid_alloc_fft_plans(aux_data_ptr in, fft_list_ptr out);
+extern void ffluid_dealloc_aux_array(aux_data_ptr in);

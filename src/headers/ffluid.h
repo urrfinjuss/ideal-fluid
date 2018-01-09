@@ -16,8 +16,8 @@
   #include <math.h>
   #include <fftw3.h>
   typedef long double	long_double_t;
-  typedef fftw_complex	long_complex_t;
-  #define PI 	acos(-1.0)
+  typedef fftwl_complex	long_complex_t;
+  #define PI 	acosl(-1.0)
 #endif
 
 
@@ -30,6 +30,7 @@ typedef struct stepping_parameters {
 typedef struct data_array {
   unsigned long		N;
   long_complex_t	*Q, *V;
+  long_double_t		*u, *q, *du;
   long_double_t		q0, u0, l;
   __float128 		time;
 } sim_data, *data_ptr;
@@ -40,16 +41,17 @@ typedef struct data_array {
   #include "ffluid/io.h"
 #endif
 
-typedef struct grid_array {
-  _Bool			Initialized;
-  unsigned long 	N;
-  long_double_t		*u, *q;
-} grid, *grid_ptr;
-
 typedef struct aux_array {
+  unsigned long		NElements;
+  unsigned long		NArrays;
+  long_complex_t	**ph;
+  long_complex_t	**ft;
 } aux_data, *aux_data_ptr;
 
 typedef struct fft_array {
+  unsigned long		NFFTs;
+  fftwl_plan		*fp;
+  fftwl_plan		*bp;
 } fft_list, *fft_list_ptr;
 
 /* Note to self: remember top to bottom this time */
@@ -57,7 +59,7 @@ typedef struct fft_array {
 #include "ffluid/mapping.h"
 #include "ffluid/timemarching.h"
 #include "ffluid/array_func.h"
-#include "ffluid/equations.h"
+#include "ffluid/math.h"
 #include "ffluid/messages.h"
 
 typedef struct control_parameters_array{
@@ -70,7 +72,6 @@ typedef struct control_parameters_array{
 
 /* Global Variable */ 
 extern sim_data		DataCurr, DataPrev;
-extern grid		GridCurr, GridPrev;
 extern control_params	Control;
 extern evolve_params	EvolveConfig;
 

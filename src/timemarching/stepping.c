@@ -23,7 +23,7 @@ void ffluid_evolve() {
   while (EvolveConfig.cur_step < EvolveConfig.nsteps) {
     ffluid_data_copy(&DataCurr, &DataPrev);
     ffluid_runge_kutta_4(&DataCurr);
-    ffluid_test_resolved();
+    ffluid_mapping_test_resolved();
     //ffluid_write_surface();
     //ffluid_append_to_log();
   }

@@ -8,7 +8,7 @@ void ffluid_mapping_module() {
   printf("halfplane.c:\tffluid_halfplane\n");
 }
 
-void ffluid_test_resolved() {
+void ffluid_mapping_test_resolved() {
 }
 
 
