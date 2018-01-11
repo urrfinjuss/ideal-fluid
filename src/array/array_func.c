@@ -18,7 +18,7 @@ void ffluid_data_init_copy(data_ptr in, data_ptr out) {
   out->N = in->N;
   ffluid_init_data(out);
   ffluid_data_copy(in, out);
-  ffluid_halfplane_setup_grid(out);
+  ffluid_setup_grid(out);
 }
 
 

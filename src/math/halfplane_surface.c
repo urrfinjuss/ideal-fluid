@@ -4,18 +4,18 @@ static sim_data SimLocal;
 static aux_data	AuxLocal;
 static fft_list FFTLocal; 
 
-void ffluid_math_init_surface_halfplane() {
+void ffluid_math_init_surface() {
   ffluid_data_init_copy(&DataCurr, &SimLocal);
   ffluid_alloc_aux_array(&AuxLocal, 2, DataCurr.N);
   ffluid_alloc_fft_plans(&AuxLocal, &FFTLocal);
 }
 
-void ffluid_math_clear_surface_halfplane() {
+void ffluid_math_clear_surface() {
   ffluid_dealloc_aux_array(&AuxLocal);
 }
 
 
-void ffluid_math_get_surface_variables_halfplane(data_ptr in, data_ptr out) {
+void ffluid_math_get_surface_variables(data_ptr in, data_ptr out) {
   /* get surface potential \Phi(q) and z(q), but the zero modes are not set. */
   /* auxiliary variable S = z_u u_q is introduced */
   unsigned long 	N = in->N;

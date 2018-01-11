@@ -5,7 +5,7 @@ void ffluid_disk() {
   printf("Default precision:\tdouble\n");
 }
 
-void ffluid_disc_setup_grid(data_ptr in) {
+void ffluid_setup_grid(data_ptr in) {
   unsigned long N = in->N;
   long_double_t l = in->l;
   long_double_t q;

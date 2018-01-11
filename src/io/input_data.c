@@ -4,7 +4,7 @@ void ffluid_set_initial_data(data_ptr in) {
   /* either read initial data from file, or generate new initial data? */
   ffluid_init_data(in); 		// memory/memory.c 
   ffluid_read_initial_data(in);
-  ffluid_halfplane_setup_grid(in);	// mapping/halfplane.c
+  ffluid_setup_grid(in);	// mapping/halfplane.c
 }
 
 void ffluid_read_initial_data(data_ptr in) {
@@ -19,7 +19,6 @@ void ffluid_read_initial_data(data_ptr in) {
     exit(0);
   }
 }
-
 
 void ffluid_read_mapping_parameters(data_ptr in, FILE *fh) {
   char line[512], *val[4];

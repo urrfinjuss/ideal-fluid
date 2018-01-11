@@ -26,6 +26,7 @@ AC_ARG_WITH([quad-precision],
   [with_quad=no] 
 )
 
+# ----------------------------------------------
 # define USE_QUAD and compile __float128 sources
 AS_IF([test "x$with_quad" != xno],
 	[
@@ -35,5 +36,6 @@ AS_IF([test "x$with_quad" != xno],
 	], [
 	AM_CONDITIONAL(WITH_QUAD, false)
 	])
+
 
 AC_OUTPUT

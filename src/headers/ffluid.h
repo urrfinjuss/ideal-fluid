@@ -7,6 +7,7 @@
 #include <quadmath.h>
 #include <complex.h>
 
+
 #ifdef USE_QUAD
   #include <fftw3q.h>
   typedef __float128	long_double_t;
@@ -19,7 +20,6 @@
   typedef fftwl_complex	long_complex_t;
   #define PI 	acosl(-1.0)
 #endif
-
 
 typedef struct stepping_parameters {
   unsigned long nsteps, cur_step;

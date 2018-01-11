@@ -3,8 +3,8 @@
 /* Disable extra debugging information */
 #undef DEBUG
 
-/* Define to 1 if you have the `fftw3' library (-lfftw3). */
-#undef HAVE_LIBFFTW3
+/* Define to 1 if you have the `fftw3l' library (-lfftw3l). */
+#undef HAVE_LIBFFTW3L
 
 /* Define to 1 if you have the `fftw3q' library (-lfftw3q). */
 #undef HAVE_LIBFFTW3Q

@@ -5,6 +5,7 @@ control_params 	Control;
 evolve_params 	EvolveConfig;
 sim_data 	DataCurr, DataPrev, DataSurface;
 
+/* list functions */
 void ffluid_list_modules() {
   ffluid_io_module();
   ffluid_memory_module();
@@ -14,6 +15,7 @@ void ffluid_list_modules() {
   ffluid_timemarching_module();
 }
 
+/* main function */
 int main (int argc, char **argv) {
   Control.DataPtrCurr = &DataCurr;
   Control.DataPtrPrev = &DataPrev;
@@ -28,9 +30,9 @@ int main (int argc, char **argv) {
   ffluid_data_init_copy(&DataCurr, &DataSurface);
   printf("ffluid_data_init_copy()\n");
 
-  ffluid_math_init_surface_halfplane();
+  ffluid_math_init_surface();
   printf("ffluid_init_surface_math()\n");
-  ffluid_math_get_surface_variables_halfplane(&DataCurr, &DataSurface);
+  ffluid_math_get_surface_variables(&DataCurr, &DataSurface);
   printf("ffluid_get_surface_variables()\n");
   ffluid_write_surface(&DataSurface, "test.file");
   
