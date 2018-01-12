@@ -21,6 +21,8 @@ int main (int argc, char **argv) {
   Control.DataPtrPrev = &DataPrev;
   Control.EvolvePtr = &EvolveConfig;
 
+  long_double_t		Volume;
+
   /* list all functions with their locations */
   // ffluid_list_modules();
 
@@ -29,13 +31,14 @@ int main (int argc, char **argv) {
   
   ffluid_data_init_copy(&DataCurr, &DataSurface);
   printf("ffluid_data_init_copy()\n");
-
   ffluid_math_init_surface();
   printf("ffluid_init_surface_math()\n");
   ffluid_math_get_surface_variables(&DataCurr, &DataSurface);
   printf("ffluid_get_surface_variables()\n");
-  ffluid_write_surface(&DataSurface, "test.file");
-  
+  ffluid_write_surface(&DataSurface, "test.disc.file");
+  ffluid_math_get_volume(&DataCurr, &Volume);
+  printf("Volume = %.16Le\n", Volume);
+
   //ffluid_evolve();
   return 0;
 }

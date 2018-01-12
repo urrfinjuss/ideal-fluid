@@ -29,8 +29,8 @@ typedef struct stepping_parameters {
 
 typedef struct data_array {
   unsigned long		N;
-  long_complex_t	*Q, *V;
-  long_double_t		*u, *q, *du;
+  long_complex_t	*Q, *V, *u;
+  long_double_t		*q, *du;
   long_double_t		q0, u0, l;
   __float128 		time;
 } sim_data, *data_ptr;
@@ -44,8 +44,8 @@ typedef struct data_array {
 typedef struct aux_array {
   unsigned long		NElements;
   unsigned long		NArrays;
-  long_complex_t	**ph;
-  long_complex_t	**ft;
+  long_complex_t	**X;
+  long_complex_t	**Y;
 } aux_data, *aux_data_ptr;
 
 typedef struct fft_array {

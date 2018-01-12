@@ -2,9 +2,9 @@
 
 void ffluid_set_initial_data(data_ptr in) {
   /* either read initial data from file, or generate new initial data? */
-  ffluid_init_data(in); 		// memory/memory.c 
+  ffluid_init_data(in);
   ffluid_read_initial_data(in);
-  ffluid_setup_grid(in);	// mapping/halfplane.c
+  ffluid_setup_grid(in);
 }
 
 void ffluid_read_initial_data(data_ptr in) {

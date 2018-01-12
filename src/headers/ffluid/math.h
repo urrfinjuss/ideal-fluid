@@ -9,3 +9,5 @@ extern void ffluid_math_init_surface();
 extern void ffluid_math_get_surface_variables(data_ptr in, data_ptr out);
 extern void ffluid_math_set_zero_mode(data_ptr in, long_complex_t S0, long_complex_t *out);
 
+/* declared in math/disc_surface.c */
+extern void ffluid_math_get_volume(data_ptr in, long_double_t *volume);

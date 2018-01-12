@@ -10,9 +10,9 @@ void ffluid_setup_grid(data_ptr in) {
   long_double_t l = in->l;
   long_double_t q;
   for (unsigned long j = 0; j < N; j++) {
-    q = PI*((2.L*j/N) - 1.L);
+    q = PI*((2.0L*j/N) - 1.0L);
     in->q[j] = q; 
-    in->u[j] = cexpl(1.I*q);
-    in->du[j] = 1.L;
+    in->u[j] = cexpl(1.0IL*q);
+    in->du[j] = 1.0L;
   }
 }

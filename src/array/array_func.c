@@ -6,8 +6,8 @@ void ffluid_arrayfunc_module() {
 }
 
 void ffluid_data_copy(data_ptr in, data_ptr out) {
-  memcpy(out->Q, in->Q, in->N*sizeof(fftw_complex));
-  memcpy(out->V, in->V, in->N*sizeof(fftw_complex));
+  memcpy(out->Q, in->Q, in->N*sizeof(long_complex_t));
+  memcpy(out->V, in->V, in->N*sizeof(long_complex_t));
   out->q0 = in->q0;
   out->u0 = in->u0;
   out->l = in->l;

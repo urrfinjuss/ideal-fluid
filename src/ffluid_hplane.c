@@ -34,7 +34,7 @@ int main (int argc, char **argv) {
   printf("ffluid_init_surface_math()\n");
   ffluid_math_get_surface_variables(&DataCurr, &DataSurface);
   printf("ffluid_get_surface_variables()\n");
-  ffluid_write_surface(&DataSurface, "test.file");
+  ffluid_write_surface(&DataSurface, "test.hplane.file");
   
   //ffluid_evolve();
   return 0;
