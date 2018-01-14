@@ -1,31 +1,40 @@
 #include "ffluid.h"
 
-data_ptr tmp;
-data_ptr *rhs;
+static sim_data TmpLocal;
+static sim_data RHSLocal[4];
 const __float128 	one_sixth = 1.Q/6;
-const long_double_t	one_half  = (long_double_t) 0.5Q;
-const long_double_t	two  = (long_double_t) 2.0Q;
-const long_double_t	one  = (long_double_t) 1.0Q;
+const __float128	one_half  = 0.5Q;
+const __float128	two  =  2.0Q;
+const __float128	one  =  1.0Q;
+
+void ffluid_init_runge_kutta_4() {
+  ffluid_data_init_copy(&DataCurr, &TmpLocal);
+  ffluid_data_init_copy(&DataCurr, &RHSLocal[0]);
+  ffluid_data_init_copy(&DataCurr, &RHSLocal[1]);
+  ffluid_data_init_copy(&DataCurr, &RHSLocal[2]);
+  ffluid_data_init_copy(&DataCurr, &RHSLocal[3]);
+  ffluid_math_init_equations();
+}
 
 void ffluid_runge_kutta_4(data_ptr in) {
   EvolveConfig.cur_step++;
   in->time += EvolveConfig.dt;
 
-  ffluid_data_copy (in, tmp);
-  ffluid_call_rhs(tmp, rhs[0]);
-  ffluid_data_fma(one_half*EvolveConfig.dt, rhs[0], in, tmp);
-  ffluid_call_rhs(tmp, rhs[1]);
-  ffluid_data_fma(one_half*EvolveConfig.dt, rhs[1], in, tmp);
-  ffluid_call_rhs(tmp, rhs[2]);
-  ffluid_data_fma(EvolveConfig.dt, rhs[2], in, tmp);
-  ffluid_call_rhs(tmp, rhs[3]);
+  ffluid_data_copy (in, &TmpLocal);
+  ffluid_call_rhs(&TmpLocal, &RHSLocal[0]);
+  ffluid_data_fma(one_half*EvolveConfig.dt, &RHSLocal[0], in, &TmpLocal);
+  ffluid_call_rhs(&TmpLocal, &RHSLocal[1]);
+  ffluid_data_fma(one_half*EvolveConfig.dt, &RHSLocal[1], in, &TmpLocal);
+  ffluid_call_rhs(&TmpLocal, &RHSLocal[2]);
+  ffluid_data_fma(EvolveConfig.dt, &RHSLocal[2], in, &TmpLocal);
+  ffluid_call_rhs(&TmpLocal, &RHSLocal[3]);
 
-  // tmp <- k3 + 2*k2 + 2*k1 + k0
-  ffluid_data_fma(two, rhs[2], rhs[3], tmp);
-  ffluid_data_fma(two, rhs[1], tmp, tmp);
-  ffluid_data_fma(one, rhs[0], tmp, tmp);
+  // TmpLocal <- k3 + 2*k2 + 2*k1 + k0
+  ffluid_data_fma(two, &RHSLocal[2], &RHSLocal[3], &TmpLocal);
+  ffluid_data_fma(two, &RHSLocal[1], &TmpLocal, &TmpLocal);
+  ffluid_data_fma(one, &RHSLocal[0], &TmpLocal, &TmpLocal);
 
-  // out <- in + dt/6 * tmp
-  ffluid_data_fma(one_sixth*EvolveConfig.dt, tmp, in, in);
+  // out <- in + dt/6 * TmpLocal
+  ffluid_data_fma(one_sixth*EvolveConfig.dt, &TmpLocal, in, in);
 }
 

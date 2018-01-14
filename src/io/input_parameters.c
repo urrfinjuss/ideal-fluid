@@ -1,7 +1,7 @@
 #include "ffluid.h"
 
 /* Set number of parameters to be set in the input file */
-#define INPUT_FILE_ARGS 5	
+#define INPUT_FILE_ARGS 6	
 
 void ffluid_read_cl_arguments(int narg, char **argv) {
   if (narg != 2) {
@@ -54,6 +54,10 @@ void ffluid_scan_input_file(FILE *fh) {
     } else if (!strcmp(keyword,"cfl_value")) {
       printf("Found:\t%s\n", keyword);
       EvolveConfig.max_cfl = strtoflt128(str_value, NULL);
+      counter++;
+    } else if (!strcmp(keyword,"fin_time")) {
+      printf("Found:\t%s\n", keyword);
+      EvolveConfig.final_time = strtoflt128(str_value, NULL);
       counter++;
     } else if (!strcmp(keyword,"number_points")) {
       printf("Found:\t%s\n", keyword);

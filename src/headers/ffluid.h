@@ -29,8 +29,9 @@ typedef struct stepping_parameters {
 
 typedef struct data_array {
   unsigned long		N;
-  long_complex_t	*Q, *V, *u;
-  long_double_t		*q, *du;
+  long_complex_t	*Q, *V;
+  long_complex_t	*u, *du;
+  long_double_t		*q;
   long_double_t		q0, u0, l;
   __float128 		time;
 } sim_data, *data_ptr;
@@ -71,7 +72,7 @@ typedef struct control_parameters_array{
 } control_params, *control_params_ptr;
 
 /* Global Variable */ 
-extern sim_data		DataCurr, DataPrev;
+extern sim_data		DataCurr, DataPrev, DataSurface;
 extern control_params	Control;
 extern evolve_params	EvolveConfig;
 

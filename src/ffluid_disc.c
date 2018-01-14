@@ -38,7 +38,9 @@ int main (int argc, char **argv) {
   ffluid_write_surface(&DataSurface, "test.disc.file");
   ffluid_math_get_volume(&DataCurr, &Volume);
   printf("Volume = %.16Le\n", Volume);
+  printf("ffluid_evolve()\n");
+  ffluid_evolve();
+  printf("Complete\n");
 
-  //ffluid_evolve();
   return 0;
 }

@@ -34,31 +34,31 @@ void ffluid_math_get_surface_variables(data_ptr in, data_ptr out) {
   
   /* direct inverse O(N log N) */
   for (unsigned long j = 0; j < N; j++) {
-    AuxLocal.Y[0][j] = (cpowl(in->Q[j], -2))*in->du[j]/N;
-    AuxLocal.Y[1][j] = -1.0IL*in->V[j]*AuxLocal.Y[0][j]*in->du[j]/N;
+    AuxLocal.X[0][j] = (cpowl(in->Q[j], -2))*in->du[j]/N;
+    AuxLocal.X[1][j] = -1.0IL*in->V[j]*AuxLocal.X[0][j];
   }
   /* can be improved with advanced FFTW interface */
-  fftwl_execute(FFTLocal.bp[0]);
-  fftwl_execute(FFTLocal.bp[1]);
-  memset(AuxLocal.X[0]+N/2, 0, N/2);
-  memset(AuxLocal.X[1]+N/2, 0, N/2);
-  for (long int j = N/2; j > -1; j--) {
+  fftwl_execute(FFTLocal.fp[0]);
+  fftwl_execute(FFTLocal.fp[1]);
+  memset(AuxLocal.Y[0]+N/2, 0, N/2);
+  memset(AuxLocal.Y[1]+N/2, 0, N/2);
+  for (unsigned long j = N/2; j > 0; j--) {
     /* AuxLocal.ft[0] stores Fourier modes of z_k, k < 0 */
     /* AuxLocal.ft[1] stores Fourier modes of Phi_k, k < 0 */ 
-    AuxLocal.X[0][j+1] = -1.0L*AuxLocal.X[0][j]/(j+1);
-    AuxLocal.X[1][j+1] = -1.0L*AuxLocal.X[1][j]/(j+1);
+    AuxLocal.Y[0][j] = -1.0L*AuxLocal.Y[0][j]/j;
+    AuxLocal.Y[1][j] = -1.0L*AuxLocal.Y[1][j]/j;
     //S0 += j*creall(AuxLocal.ft[0][j]*conjl(AuxLocal.ft[0][j]));
     //T0 += -creall(AuxLocal.ft[0][j]);
   }
-  AuxLocal.X[0][0] = 0.0L;
-  AuxLocal.X[1][0] = 0.0L;
+  AuxLocal.Y[0][0] = 0.0L;
+  AuxLocal.Y[1][0] = 0.0L;
   //memcpy(SimLocal.Q, AuxLocal.X[0], N*sizeof(long_complex_t));
   //memcpy(SimLocal.V, AuxLocal.X[1], N*sizeof(long_complex_t));
   //ffluid_write_surface(&SimLocal, "SimLocal2.disc.file");
   /* setting of the zero modes of Phi,Z goes here */
   /* can be improved with advanced FFTW interface */ 
-  fftwl_execute(FFTLocal.fp[0]);
-  fftwl_execute(FFTLocal.fp[1]);
-  memcpy(out->Q, AuxLocal.Y[0], N*sizeof(long_complex_t));
-  memcpy(out->V, AuxLocal.Y[1], N*sizeof(long_complex_t));
+  fftwl_execute(FFTLocal.bp[0]);
+  fftwl_execute(FFTLocal.bp[1]);
+  memcpy(out->Q, AuxLocal.X[0], N*sizeof(long_complex_t));
+  memcpy(out->V, AuxLocal.X[1], N*sizeof(long_complex_t));
 }
