@@ -22,17 +22,18 @@
 #endif
 
 typedef struct stepping_parameters {
-  unsigned long nsteps, cur_step;
+  unsigned long nsteps, cur_step, dmp_cnt;
   __float128 	cfl, max_cfl, dt;
   __float128	final_time;
 } evolve_params, *evolve_params_ptr;
 
 typedef struct data_array {
   unsigned long		N;
-  long_complex_t	*Q, *V;
+  long_complex_t	*R, *V;
   long_complex_t	*u, *du;
   long_double_t		*q;
   long_double_t		q0, u0, l;
+  long_double_t		Volume, r0;
   __float128 		time;
 } sim_data, *data_ptr;
 
@@ -58,9 +59,9 @@ typedef struct fft_array {
 /* Note to self: remember top to bottom this time */
 #include "ffluid/memory.h"
 #include "ffluid/mapping.h"
+#include "ffluid/math.h"
 #include "ffluid/timemarching.h"
 #include "ffluid/array_func.h"
-#include "ffluid/math.h"
 #include "ffluid/messages.h"
 
 typedef struct control_parameters_array{
@@ -72,7 +73,8 @@ typedef struct control_parameters_array{
 } control_params, *control_params_ptr;
 
 /* Global Variable */ 
-extern sim_data		DataCurr, DataPrev, DataSurface;
+extern sim_data		DataCurr, DataPrev;
+extern sim_data         DataSpectrum, DataSurface;
 extern control_params	Control;
 extern evolve_params	EvolveConfig;
 

@@ -14,6 +14,9 @@ void ffluid_math_clear_surface() {
   ffluid_dealloc_aux_array(&AuxLocal);
 }
 
+void ffluid_math_get_r0(data_ptr in) {
+  in->r0 = 1.0L;
+}
 
 void ffluid_math_get_surface_variables(data_ptr in, data_ptr out) {
   /* auxiliary variable S = z_u u_q is introduced */
@@ -23,7 +26,7 @@ void ffluid_math_get_surface_variables(data_ptr in, data_ptr out) {
   
   /* direct inverse O(N log N) */
   for (unsigned long j = 0; j < N; j++) {
-    AuxLocal.X[0][j] = (cpowl(in->Q[j], -2) - 1.0L)*in->du[j]/N;
+    AuxLocal.X[0][j] = (cpowl(in->R[j], -1) - 1.0L)*in->du[j]/N;
     AuxLocal.X[1][j] = -1.0IL*in->V[j]*(AuxLocal.X[0][j] + 1.0L)*in->du[j]/N;
   }
   /* can be improved with advanced FFTW interface */
@@ -42,7 +45,7 @@ void ffluid_math_get_surface_variables(data_ptr in, data_ptr out) {
     T0 += -creall(AuxLocal.Y[0][j]);
   }
   /* setting of the zero modes of Phi,Z goes here */
-  memcpy(SimLocal.Q, AuxLocal.Y[0], N*sizeof(long_complex_t));
+  memcpy(SimLocal.R, AuxLocal.Y[0], N*sizeof(long_complex_t));
   memcpy(SimLocal.V, AuxLocal.Y[1], N*sizeof(long_complex_t));
   ffluid_math_set_zero_mode(&SimLocal, -0.5IL*S0, &z0);
   AuxLocal.Y[0][0] = T0 - creall(z0) + z0;
@@ -50,7 +53,7 @@ void ffluid_math_get_surface_variables(data_ptr in, data_ptr out) {
   fftwl_execute(FFTLocal.bp[0]);
   fftwl_execute(FFTLocal.bp[1]);
   for (unsigned long j = 0; j < N; j++) {
-    out->Q[j] = in->u[j] + AuxLocal.X[0][j];
+    out->R[j] = in->u[j] + AuxLocal.X[0][j];
   }
   memcpy(out->V, AuxLocal.X[1], N*sizeof(long_complex_t));
 }
@@ -67,9 +70,9 @@ void ffluid_math_set_zero_mode(data_ptr in, long_complex_t S0, long_complex_t *o
   for (unsigned long j = 1; j < N/2 - 1; j++) {
     AuxLocal.X[0][j] = AuxLocal.X[0][0]/(1.L - conjl(AuxLocal.X[0][0])*AuxLocal.X[0][j-1]);
   }
-  AuxLocal.X[1][0] = in->Q[1]/b - 2.0L*S0*conjl(AuxLocal.X[0][0]);
+  AuxLocal.X[1][0] = in->R[1]/b - 2.0L*S0*conjl(AuxLocal.X[0][0]);
   for (unsigned long j = 1; j < N/2 - 1; j++) {
-    AuxLocal.X[1][j] = in->Q[j+1]/b - conjl(AuxLocal.X[0][0])*AuxLocal.X[1][j-1];
+    AuxLocal.X[1][j] = in->R[j+1]/b - conjl(AuxLocal.X[0][0])*AuxLocal.X[1][j-1];
     AuxLocal.X[1][j] = AuxLocal.X[1][j]/(1.0L - conjl(AuxLocal.X[0][0])*AuxLocal.X[0][j-1]);
   }
 
@@ -80,5 +83,21 @@ void ffluid_math_set_zero_mode(data_ptr in, long_complex_t S0, long_complex_t *o
   *out = b*(tmp*AuxLocal.X[0][0] + 1.0L*S0);
 }
 
+void ffluid_math_get_surface_spectrum(data_ptr in, data_ptr out) {
+  /* get surface potential \Phi(q) and z(q), but the zero modes are not set. */
+  /* auxiliary variable S = z_u u_q is introduced */
+  unsigned long 	N = in->N;
+  
+  /* direct inverse O(N log N) */
+  for (unsigned long j = 0; j < N; j++) {
+    AuxLocal.X[0][j] = in->R[j]/N;
+    AuxLocal.X[1][j] = in->V[j]/N;
+  }
+  /* can be improved with advanced FFTW interface */
+  fftwl_execute(FFTLocal.fp[0]);
+  fftwl_execute(FFTLocal.fp[1]);
+  memcpy(out->R, AuxLocal.Y[0], N*sizeof(long_complex_t));
+  memcpy(out->V, AuxLocal.Y[1], N*sizeof(long_complex_t));
+}
 
 

@@ -13,8 +13,8 @@ void ffluid_init_runge_kutta_4() {
   ffluid_data_init_copy(&DataCurr, &RHSLocal[1]);
   ffluid_data_init_copy(&DataCurr, &RHSLocal[2]);
   ffluid_data_init_copy(&DataCurr, &RHSLocal[3]);
-  ffluid_math_init_equations();
 }
+
 
 void ffluid_runge_kutta_4(data_ptr in) {
   EvolveConfig.cur_step++;

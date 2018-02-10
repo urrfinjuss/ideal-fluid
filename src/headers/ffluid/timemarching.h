@@ -1,6 +1,6 @@
 /* declared in timemarching/stepping.c */
 extern void ffluid_timemarching_module();
-extern void ffluid_init_stepping();
+extern void ffluid_setup_stepping();
 extern void ffluid_evolve();
 
 /* declared in timemarching/runge_kutta_4.c */

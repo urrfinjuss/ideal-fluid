@@ -1,4 +1,4 @@
-#AM_CFLAGS = -Wno-format
+AM_CFLAGS = -Wno-format
 bin_PROGRAMS = ffluid_disc ffluid_hplane
 
 

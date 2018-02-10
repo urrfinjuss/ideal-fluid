@@ -42,7 +42,7 @@ void ffluid_read_data_from_file(data_ptr in, FILE *fh) {
   for (int j = 0; j < 5; j++) val[j] = malloc(80*sizeof(char));
   while ((counter < DataCurr.N)&&(fgets(line, 512, fh))) {
     sscanf(line, "%s\t%s\t%s\t%s\t%s\n", val[0], val[1], val[2], val[3], val[4]);
-    in->Q[counter] = strtold(val[1], NULL) + 1.0IL*strtod(val[2], NULL);
+    in->R[counter] = strtold(val[1], NULL) + 1.0IL*strtod(val[2], NULL);
     in->V[counter] = strtold(val[3], NULL) + 1.0IL*strtod(val[4], NULL);
     counter++;
   }

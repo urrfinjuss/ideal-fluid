@@ -14,4 +14,6 @@ extern void ffluid_scan_input_file(FILE *fh);
 
 /* declared in io/output.c */
 extern void ffluid_write_surface(data_ptr in, char *fname);
+extern void ffluid_write_spectrum(data_ptr in, char *fname);
 extern void ffluid_append_to_log();
+extern void ffluid_write_array(long_complex_t *in, unsigned long N, char *fname);

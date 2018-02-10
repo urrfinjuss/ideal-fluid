@@ -7,7 +7,7 @@ void ffluid_memory_module() {
 }
 
 void ffluid_init_data(data_ptr in) {
-  in->Q = fftwl_malloc(in->N*sizeof(long_complex_t));
+  in->R = fftwl_malloc(in->N*sizeof(long_complex_t));
   in->V = fftwl_malloc(in->N*sizeof(long_complex_t));
   in->u = fftwl_malloc(in->N*sizeof(long_complex_t));
   in->du = fftwl_malloc(in->N*sizeof(long_complex_t));

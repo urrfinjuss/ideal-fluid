@@ -3,7 +3,8 @@
 
 control_params 	Control;
 evolve_params 	EvolveConfig;
-sim_data 	DataCurr, DataPrev, DataSurface;
+sim_data 	DataCurr, DataPrev;
+sim_data 	DataSpectrum, DataSurface;
 
 /* list functions */
 void ffluid_list_modules() {
@@ -21,26 +22,30 @@ int main (int argc, char **argv) {
   Control.DataPtrPrev = &DataPrev;
   Control.EvolvePtr = &EvolveConfig;
 
-  long_double_t		Volume;
-
-  /* list all functions with their locations */
-  // ffluid_list_modules();
-
+  /* ffluid_topread() */
   ffluid_read_cl_arguments(argc, argv);
   ffluid_set_initial_data(&DataCurr);
-  
-  ffluid_data_init_copy(&DataCurr, &DataSurface);
-  printf("ffluid_data_init_copy()\n");
+
+  /* ffluid_alloc_timemarching() */
+  ffluid_data_init_copy(&DataCurr, &DataPrev);
+  ffluid_init_runge_kutta_4(); // or rk6
+  ffluid_alloc_equations();
+
+  /* ffluid_alloc_output() */
+  ffluid_data_init_copy(&DataCurr, &DataSpectrum); 
+  ffluid_data_init_copy(&DataCurr, &DataSurface); 
   ffluid_math_init_surface();
-  printf("ffluid_init_surface_math()\n");
-  ffluid_math_get_surface_variables(&DataCurr, &DataSurface);
-  printf("ffluid_get_surface_variables()\n");
-  ffluid_write_surface(&DataSurface, "test.disc.file");
-  ffluid_math_get_volume(&DataCurr, &Volume);
-  printf("Volume = %.16Le\n", Volume);
-  printf("ffluid_evolve()\n");
+
+  /* ffluid_timemarching() */
+  ffluid_setup_stepping();
   ffluid_evolve();
   printf("Complete\n");
+  /* unused block for output */
+  //ffluid_data_init_copy(&DataCurr, &DataSurface);
+  //ffluid_math_init_surface();
+  //ffluid_math_get_surface_variables(&DataCurr, &DataSurface);
+  //ffluid_write_surface(&DataSurface, "test.disc.file");
+  //ffluid_math_get_volume(&DataCurr, &Volume);
 
   return 0;
 }
