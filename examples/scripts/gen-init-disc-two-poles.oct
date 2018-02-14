@@ -2,7 +2,7 @@
 # Initial data generation script 
 
 # data parameters
-N = 1024; 	# number of gridpoints
+N = 2048; 	# number of gridpoints
 
 # grid parameters:
 time = 0.0;
@@ -12,7 +12,7 @@ l    = 1.0;
 # pole locations:
 a    = 1.8i;
 r    = 0.2;
-C    = 0.02;
+C    = 1.0;
 A    = 0.00;
 
 # two poles initial data
@@ -28,7 +28,7 @@ for j = 1:N
   #dZ = -1.0I*exp(-1.0I*q);
   R = 1./dZ;
   #V = 20.0*exp(-1.0I*q);
-  V = w + w.^2;
+  V = -1.i*C*(w + 0.5*w.^2);
   fprintf(fh, "%.16e\t", q);
   fprintf(fh, "%.16e\t%.16e\t", real(R), imag(R));
   fprintf(fh, "%.16e\t%.16e\n", real(V), imag(V));

@@ -33,7 +33,7 @@ typedef struct data_array {
   long_complex_t	*u, *du;
   long_double_t		*q;
   long_double_t		q0, u0, l;
-  long_double_t		Volume, r0;
+  long_double_t		Volume, Hamiltonian;
   __float128 		time;
 } sim_data, *data_ptr;
 

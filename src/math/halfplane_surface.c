@@ -15,7 +15,6 @@ void ffluid_math_clear_surface() {
 }
 
 void ffluid_math_get_r0(data_ptr in) {
-  in->r0 = 1.0L;
 }
 
 void ffluid_math_get_surface_variables(data_ptr in, data_ptr out) {
@@ -58,6 +57,21 @@ void ffluid_math_get_surface_variables(data_ptr in, data_ptr out) {
   memcpy(out->V, AuxLocal.X[1], N*sizeof(long_complex_t));
 }
 
+void ffluid_math_get_hamiltonian(data_ptr in, long_double_t *hamiltonian) {
+  /* get hamiltonian (constant of motion) */
+  unsigned long N = in->N;
+
+  /**/
+  for (unsigned long j = 0; j < N; j++) {
+    AuxLocal.X[0][j] = -1.IL*(in->V[j]*in->du[j]/in->R[j])/N;
+  }
+  fftwl_execute(FFTLocal.fp[0]);
+  memset(AuxLocal.Y[0]+N/2, 0, N/2);
+  *hamiltonian = 0.0L;
+  for (long int j = N/2-1; j > -1; j--) {
+    *hamiltonian += AuxLocal.Y[0][j]*conjl(AuxLocal.Y[0][j])/( j+1 );
+  }
+}
 
 void ffluid_math_set_zero_mode(data_ptr in, long_complex_t S0, long_complex_t *out) {
   unsigned long		N = in->N;

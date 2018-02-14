@@ -20,11 +20,28 @@ void ffluid_math_get_volume(data_ptr in, long_double_t *volume){
   }
   fftwl_execute(FFTLocal.fp[0]);
   memset(AuxLocal.Y[0]+N/2, 0, N/2);
-  *volume = 0.L;
+  *volume = 0.0L;
   for (long int j = N/2-1; j > -1; j--) {
     *volume += AuxLocal.Y[0][j]*conjl(AuxLocal.Y[0][j])/(j + 1);
   }
   *volume = PI*(*volume);
+}
+
+void ffluid_math_get_hamiltonian(data_ptr in, long_double_t *hamiltonian) {
+  /* get hamiltonian (constant of motion) */
+  unsigned long N = in->N;
+
+  /**/
+  for (unsigned long j = 0; j < N; j++) {
+    //AuxLocal.X[0][j] = -1.IL*(in->V[j]*in->du[j]/in->R[j])/N;
+    AuxLocal.X[0][j] = in->V[j]/in->R[j]/N;
+  }
+  fftwl_execute(FFTLocal.fp[0]);
+  memset(AuxLocal.Y[0]+N/2, 0, N/2);
+  *hamiltonian = 0.0L;
+  for (long int j = N/2-1; j > -1; j--) {
+    *hamiltonian += AuxLocal.Y[0][j]*conjl(AuxLocal.Y[0][j])/( j+1 );
+  }
 }
 
 /*
