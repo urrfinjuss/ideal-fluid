@@ -38,6 +38,8 @@ void ffluid_last_detailed_snapshot() {
 void ffluid_detailed_snapshot() {
   if ((EvolveConfig.cur_step % 128) == 0) {
     ffluid_math_get_surface_variables(&DataCurr, &DataSurface);
+    ffluid_math_get_volume(&DataCurr, &DataCurr.Volume);
+    ffluid_math_get_hamiltonian(&DataCurr, &DataCurr.Hamiltonian);
     ffluid_append_to_log(&DataSurface, "time.log");
   }
   if ((EvolveConfig.cur_step % 1024) == 0) {
@@ -55,7 +57,6 @@ void ffluid_detailed_snapshot() {
 }
 
 void ffluid_evolve() {
-  ffluid_math_get_volume(&DataCurr, &DataCurr.Volume);
   ffluid_start_log("time.log");
   ffluid_detailed_snapshot();  
   while (EvolveConfig.cur_step < EvolveConfig.nsteps) {

@@ -43,7 +43,7 @@ void ffluid_start_log(char *fname) {
   strcpy(full_path, Control.data_path);
   strcat(full_path, fname);
   FILE *fh = fopen(full_path, "w");
-  fprintf(fh, "# 1. Time 2. y(-pi)\n\n");
+  fprintf(fh, "# 1. Time 2. y(-pi) 3. Volume (const) 4. Hamiltonian (const)\n\n");
   fclose(fh);
 }
 
@@ -54,7 +54,7 @@ void ffluid_append_to_log(data_ptr in, char *fname) {
   strcpy(full_path, Control.data_path);
   strcat(full_path, fname);
   FILE *fh = fopen(full_path, "a");
-  fprintf(fh, "%.12Qe\t%.16Le\n", DataCurr.time, cimagl(in->R[0]));
+  fprintf(fh, "%.12Qe\t%.16Le\t%.16Le\t%.16Le\n", DataCurr.time, cimagl(in->R[0]), DataCurr.Volume, DataCurr.Hamiltonian);
   fclose(fh);
 
 }
