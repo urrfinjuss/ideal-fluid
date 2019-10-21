@@ -1,0 +1,45 @@
+#!/usr/bin/octave -qf
+# Initial data generation script 
+
+# data parameters
+N = 512; 	# number of gridpoints
+
+# grid parameters:
+time = 0.0;
+u0   = 0.0;
+q0   = 0.0;
+l    = 1.0;
+# travelling wave parameters:
+k0    = 1;
+k     = 3;
+Sigma = 0.04;
+
+# linear wave:
+Omega = sqrt(Sigma*k*(k^2-k0^2));
+#Omega = 1;
+a    = 0.075;
+
+
+# two poles initial data
+fh = fopen("../config/angular_momentum_001.txt","w");
+fprintf(fh, "# 1. q 2.-3. R 4.-5. V\n");
+fprintf(fh, "# Time = %.16e\tus = %.16e\tqs = %.16e\tl = %.16e\n\n", time, u0, q0, l);
+for j = 1:N
+  q = pi*(2*(j-1)/N - 1);
+  w = exp(-1.0i*q);
+  #dZ = r*(1./(w - a) - 1./(w - conj(a)));
+  #dZ = r*((w+a)./(w-a) + (w-a)./(w+a) ) ;
+  F  = (1.i/k0)*exp(-1.i*k0*q)*(1 + a*exp(-1.i*k*q));
+  dZ = exp(-1.i*k0*q)*(1 + a*(k/k0 + 1)*exp(-1.i*k*q));
+  #dPhi = (Omega/k0)*a*exp(-1.i*k*q);
+  Phi = 1.i*Omega*(0.5*(1+a*a) + a*exp(-1.i*k*q));
+  dPhi = Omega*k*a*exp(-1.i*k*q);
+
+  Q2  = exp(-1.i*k0*q)./dZ;
+  Q   = sqrt(Q2);
+  V = 1.i*Q2*dPhi;
+  fprintf(fh, "%.16e\t", q);
+  fprintf(fh, "%.16e\t%.16e\t", real(Q), imag(Q));
+  fprintf(fh, "%.16e\t%.16e\n", real(V), imag(V));
+end
+fclose(fh);

@@ -2,24 +2,36 @@
 # Initial data generation script 
 
 # data parameters
-N = 256; 	# number of gridpoints
+N = 2048; 	# number of gridpoints
 
 # grid parameters:
 time = 0.0;
 u0   = 0.0;
 q0   = 0.0;
 l    = 1.0;
+# pole locations:
+a    = 1.8i;
+r    = 0.2;
+C    = 1.0;
+A    = 0.0;
 
-# second Fourier mode initial data
-fh = fopen("../config/disc_0002.txt","w");
-fprintf(fh, "# 1. q 2.-3. Q 4.-5. V\n");
+# two poles initial data
+fh = fopen("../config/disc_0003.txt","w");
+fprintf(fh, "# 1. q 2.-3. R 4.-5. V\n");
 fprintf(fh, "# Time = %.16e\tus = %.16e\tqs = %.16e\tl = %.16e\n\n", time, u0, q0, l);
 for j = 1:N
   q = pi*(2*(j-1)/N - 1);
-  Q = 1./sqrt(1. + 0.8*exp(2.0I*q));
-  V = 0.5*exp(2.0I*q);
+  w = exp(-1.0i*q);
+  #dZ = r*(1./(w - a) - 1./(w - conj(a)));
+  #dZ = r*((w+a)./(w-a) + (w-a)./(w+a) ) ;
+  dZ = 1. + A*w;
+  #dZ = -1.0I*exp(-1.0I*q);
+  R = 1./dZ;
+  #V = 20.0*exp(-1.0I*q);
+  V = -1.i*C*(0.0*w + 0.50*w.^3);
   fprintf(fh, "%.16e\t", q);
-  fprintf(fh, "%.16e\t%.16e\t", real(Q), imag(Q));
+  fprintf(fh, "%.16e\t%.16e\t", real(R), imag(R));
   fprintf(fh, "%.16e\t%.16e\n", real(V), imag(V));
 end
+printf("Volume of this droplet is %.13e\n", pi*(1 + 2*A^2));
 fclose(fh);

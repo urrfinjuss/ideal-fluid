@@ -1,0 +1,53 @@
+#!/usr/bin/octave -qf
+# Initial data generation script 
+
+# data parameters
+N = 8192; 	# number of gridpoints
+
+# grid parameters:
+time = 0.0;
+u0   = 0.0;
+q0   = 0.0;
+l    = 1.0;
+# pole locations:
+a1    = -0.5*pi + 0.3i; b1 = -0.5*pi + 0.6i;
+a2    = +0.5*pi + 0.3i; b2 = +0.5*pi + 0.6i;
+r    = -0.76i;
+C    = -0.01;
+A    = 0.0;
+s0   = 0.5;
+
+# two poles initial data
+fh = fopen("../config/disc_0007.txt","w");
+fprintf(fh, "# 1. q 2.-3. R 4.-5. V\n");
+fprintf(fh, "# Time = %.16e\tus = %.16e\tqs = %.16e\tl = %.16e\n\n", time, u0, q0, l);
+for j = 1:N
+  q = pi*(2*(j-1)/N - 1);
+  w = exp(-1.0i*q);
+  #dZ = r*(1./(w - a) - 1./(w - conj(a)));
+  # poles
+  p1 = cot(0.5*(q-a1)) - i;
+  p2 = cot(0.5*(q-a2)) - i;
+  p3 = cot(0.5*(q-b1)) - i;
+  p4 = cot(0.5*(q-b2)) - i;
+  # dipoles
+  d1 =  (cot(0.5*(q - a1)) - cot(0.5*(q - b1)));
+  d2 =  (cot(0.5*(q - a2)) - cot(0.5*(q - b2)));
+
+  #
+  #dZ = 1.0 + r*p1 + r*p2;
+  dZ = s0 + r*(p1-p3 ) + r*(p2-p4 );
+  #dZ = 1. + A*w;
+  #dZ = -1.0I*exp(-1.0I*q);
+  R = 1./sqrt(dZ);
+  dPhi = C*w.*(r*((p1 - p3) + (p2 - p4)));
+  V = i*dPhi/dZ;
+  #V = C*r*((p1-p2) + (p3-p4));
+  
+  #V = -1.i*C*(0.0*w + 0.50*w.^3);
+  fprintf(fh, "%.16e\t", q);
+  fprintf(fh, "%.16e\t%.16e\t", real(R), imag(R));
+  fprintf(fh, "%.16e\t%.16e\n", real(V), imag(V));
+end
+printf("Volume of this droplet is %.13e\n", pi*(1 + 2*A^2));
+fclose(fh);

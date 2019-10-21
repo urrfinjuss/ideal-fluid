@@ -4,7 +4,7 @@
 control_params 	Control;
 evolve_params 	EvolveConfig;
 sim_data 	DataCurr, DataPrev;
-sim_data 	DataSpectrum, DataSurface;
+sim_data 	DataSpectrumZPh, DataSpectrum, DataSurface;
 
 /* list functions */
 void ffluid_list_modules() {

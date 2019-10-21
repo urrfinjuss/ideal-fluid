@@ -1,0 +1,31 @@
+#!/usr/bin/octave -qf
+# Initial data generation script for Dirichlet ellipse 
+
+# data parameters
+N = 4096; 	# number of gridpoints
+
+# grid parameters:
+time = 0.0;
+u0   = 0.0;
+q0   = 0.0;
+l    = 1.0;
+# pole locations:
+A    = 1.0;
+
+# two poles initial data
+fh = fopen("../config/disc_0002.txt","w");
+fprintf(fh, "# 1. q 2.-3. R 4.-5. V\n");
+fprintf(fh, "# Time = %.16e\tus = %.16e\tqs = %.16e\tl = %.16e\n\n", time, u0, q0, l);
+for j = 1:N
+  q = pi*(2*(j-1)/N - 1);
+  w = exp(-1.0i*q);
+  dZ = 1. + 0.0*w;
+  R = 1./dZ;
+  V = -2.0i*w.^5;
+  #V = -1.i*C*(0.0*w + 0.50*w.^3);
+  fprintf(fh, "%.16e\t", q);
+  fprintf(fh, "%.16e\t%.16e\t", real(R), imag(R));
+  fprintf(fh, "%.16e\t%.16e\n", real(V), imag(V));
+end
+printf("Volume of this droplet is %.13e\n", pi);
+fclose(fh);

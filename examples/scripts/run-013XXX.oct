@@ -1,0 +1,53 @@
+#!/usr/bin/octave -qf
+# Initial data generation script 
+
+# data parameters
+N = 16384; 	# number of gridpoints
+
+# grid parameters:
+time = 0.0;
+u0   = 0.0;
+q0   = 0.0;
+l    = 1.0;
+# pole locations:
+a1    = -0.5*pi + 0.3i; b1 = -0.5*pi + 0.6i;
+a2    = +0.5*pi + 0.3i; b2 = +0.5*pi + 0.6i;
+r    = -0.5i;
+C    = 1.i*sqrt(1.2);
+A    = 0.0;
+s0   = 0.5;
+
+# two poles initial data
+fh = fopen("../config/disc_0013XXX.txt","w");
+fprintf(fh, "# 1. q 2.-3. xi = sqrt{rho} 4.-5. nu\n");
+fprintf(fh, "# Time = %.16e\tus = %.16e\tqs = %.16e\tl = %.16e\n\n", time, u0, q0, l);
+for j = 1:N
+  q = pi*(2*(j-1)/N - 1);
+  #dZ = r*(1./(w - a) - 1./(w - conj(a)));
+  # poles
+  p1 = cot(0.5*(q-a1)) - i;
+  p2 = cot(0.5*(q-a2)) - i;
+  p3 = cot(0.5*(q-b1)) - i;
+  p4 = cot(0.5*(q-b2)) - i;
+  # dipoles
+  d1 =  (cot(0.5*(q - a1)) - cot(0.5*(q - b1)));
+  d2 =  (cot(0.5*(q - a2)) - cot(0.5*(q - b2)));
+
+  # natural variables
+  dZ   = (s0 + r*p1).*exp(-1.i*q);
+  dPhi =     C*r*p1;
+  # test of Hamiltonian
+  dZ   = -1.i*exp(-1.i*q);
+  dPhi = C.*exp(-2.i*q); 
+  #dPhi =     C*r*((p1 - p3) + (p2 - p4)).*exp(-1.i*q);
+
+  # R,V variables
+  rho = exp(-1.i*q)./dZ;
+  xi  = sqrt(rho);
+  nu  = 1.i*rho.*dPhi;
+  
+  fprintf(fh, "%.16e\t", q);
+  fprintf(fh, "%.16e\t%.16e\t", real(xi), imag(xi));
+  fprintf(fh, "%.16e\t%.16e\n", real(nu), imag(nu));
+end
+fclose(fh);

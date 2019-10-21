@@ -2,7 +2,7 @@
 # Initial data generation script 
 
 # data parameters
-N = 2048; 	# number of gridpoints
+N = 8192; 	# number of gridpoints
 
 # grid parameters:
 time = 0.0;
@@ -10,10 +10,11 @@ u0   = 0.0;
 q0   = 0.0;
 l    = 1.0;
 # pole locations:
-a    = 1.8i;
-r    = 0.2;
+a1    = -0.5*pi + 0.5i;
+a2    = +0.5*pi + 0.5i;
+r    = -0.4i;
 C    = 1.0;
-A    = 0.00;
+A    = 0.0;
 
 # two poles initial data
 fh = fopen("../config/disc_0003.txt","w");
@@ -23,12 +24,13 @@ for j = 1:N
   q = pi*(2*(j-1)/N - 1);
   w = exp(-1.0i*q);
   #dZ = r*(1./(w - a) - 1./(w - conj(a)));
-  #dZ = r*((w+a)./(w-a) + (w-a)./(w+a) ) ;
-  dZ = 1. + A*w;
+  dZ = 1.0 + r*(cot(0.5*(q - a1)) - 1.i) + r*(cot(0.5*(q - a2)) - 1.i);
+  #dZ = 1. + A*w;
   #dZ = -1.0I*exp(-1.0I*q);
   R = 1./dZ;
   #V = 20.0*exp(-1.0I*q);
-  V = -1.i*C*(w + 0.5*w.^2);
+  V = C*(r*(cot(0.5*(q - a1)) - 1.i) - r*(cot(0.5*(q - a2)) - 1.i));
+  #V = -1.i*C*(0.0*w + 0.50*w.^3);
   fprintf(fh, "%.16e\t", q);
   fprintf(fh, "%.16e\t%.16e\t", real(R), imag(R));
   fprintf(fh, "%.16e\t%.16e\n", real(V), imag(V));

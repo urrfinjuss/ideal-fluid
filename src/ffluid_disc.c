@@ -4,7 +4,7 @@
 control_params 	Control;
 evolve_params 	EvolveConfig;
 sim_data 	DataCurr, DataPrev;
-sim_data 	DataSpectrum, DataSurface;
+sim_data 	DataSpectrum, DataSpectrumZPh, DataSurface;
 
 /* list functions */
 void ffluid_list_modules() {
@@ -33,6 +33,7 @@ int main (int argc, char **argv) {
 
   /* ffluid_alloc_output() */
   ffluid_data_init_copy(&DataCurr, &DataSpectrum); 
+  ffluid_data_init_copy(&DataCurr, &DataSpectrumZPh); 
   ffluid_data_init_copy(&DataCurr, &DataSurface); 
   ffluid_math_init_surface();
 

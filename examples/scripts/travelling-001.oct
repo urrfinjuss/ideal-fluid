@@ -1,0 +1,38 @@
+#!/usr/bin/octave -qf
+# Initial data generation script 
+
+# data parameters
+N = 2048; 	# number of gridpoints
+
+# grid parameters:
+time = 0.0;
+u0   = 0.0;
+q0   = 0.0;
+l    = 1.0;
+# travelling wave parameters:
+k0    = 1;
+k     = 2;
+Sigma = 1e-2;
+
+# linear wave:
+Omega = sqrt(Sigma*k*(k^2-k0^2));
+A    = 0.5;
+B    = -1.i*Sigma*(k-k0)*A/Omega
+B    = -8.i*Sigma*(k-k0)*A/Omega
+
+# two poles initial data
+fh = fopen("../config/travelling_001.txt","w");
+fprintf(fh, "# 1. q 2.-3. R 4.-5. V\n");
+fprintf(fh, "# Time = %.16e\tus = %.16e\tqs = %.16e\tl = %.16e\n\n", time, u0, q0, l);
+for j = 1:N
+  q = pi*(2*(j-1)/N - 1);
+  w = exp(-1.0i*q);
+  #dZ = r*(1./(w - a) - 1./(w - conj(a)));
+  #dZ = r*((w+a)./(w-a) + (w-a)./(w+a) ) ;
+  R = sqrt(1. + A*w.^k);
+  V = B*w.^k;
+  fprintf(fh, "%.16e\t", q);
+  fprintf(fh, "%.16e\t%.16e\t", real(R), imag(R));
+  fprintf(fh, "%.16e\t%.16e\n", real(V), imag(V));
+end
+fclose(fh);

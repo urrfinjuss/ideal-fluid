@@ -1,0 +1,35 @@
+#!/usr/bin/octave -qf
+# Initial data generation script 
+Sigma = 0.5;
+k     = 7;
+A     = 0.06;
+s0    = 1.00;
+# data parameters
+N = 2048; 	# number of gridpoints
+
+# grid parameters:
+time = 0.0;
+u0   = 0.0;
+q0   = 0.0;
+l    = 1.0;
+
+# needs checking c = w/k
+c    = 1.00*sqrt(Sigma*(k+1)*(k-1)/k);
+
+# two poles initial data
+fh = fopen("../config/disc_0003.txt","w");
+fprintf(fh, "# 1. q 2.-3. R 4.-5. V\n");
+fprintf(fh, "# Time = %.16e\tus = %.16e\tqs = %.16e\tl = %.16e\n\n", time, u0, q0, l);
+for j = 1:N
+  q = pi*(2*(j-1)/N - 1);
+  w = exp(-1.0i*q);
+  # z = i*w*f(u - ct)
+  S = s0 + (k+1)*A*exp(-1.0i*k*q);
+  V = c*k*A.*(1 + (k+1)*A*exp(-1.0i*k*q)).*exp(-1.0i*k*q);
+  R = sqrt(S);
+
+  fprintf(fh, "%.16e\t", q);
+  fprintf(fh, "%.16e\t%.16e\t", real(R), imag(R));
+  fprintf(fh, "%.16e\t%.16e\n", real(V), imag(V));
+end
+fclose(fh);

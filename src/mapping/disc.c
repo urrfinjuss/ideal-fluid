@@ -14,6 +14,7 @@ void ffluid_setup_grid(data_ptr in) {
     q = PI*((2.0L*j/N) - 1.0L) - in->q0;
     in->q[j] = q + in->q0;
     in->u[j] = in->u0+2.L*atan2l(l*sinl(0.5L*q),cosl(0.5L*q));
-    in->du[j] = -1.0IL*cexpl(-1.0IL*(q - in->q0));  // d\xi/ du
+    //in->du[j] = -1.0IL*cexpl(-1.0IL*(q - in->q0));  // d\xi/ du
+    in->du[j] = cexpl(-1.0IL*(q - in->q0));  // d\xi/ du
   }
 }

@@ -1,0 +1,78 @@
+#!/usr/bin/octave -qf
+# Initial data generation script 
+
+# data parameters
+N = 8192; 	# number of gridpoints
+
+# grid parameters:
+time = 0.0;
+u0   = 0.0;
+q0   = 0.0;
+l    = 1.0;
+# pole locations:
+a1    = -0.5*pi + 0.2i; b1 = -0.5*pi + 0.8i;
+a2    = +0.5*pi + 0.2i; b2 = +0.5*pi + 0.8i;
+w1    = -0.5*pi + 0.5i;
+w2    = +0.5*pi + 0.5i;
+rZ   = -0.5i;
+r    = -0.12i; #*exp(0.25i*pi);
+C    = -0.01i;
+A    = 0.0;
+s0   = 0.6;
+
+# two poles initial data
+fh = fopen("../config/disc_0014.txt","w");
+fprintf(fh, "# 1. q 2.-3. R 4.-5. V\n");
+fprintf(fh, "# Time = %.16e\tus = %.16e\tqs = %.16e\tl = %.16e\n\n", time, u0, q0, l);
+for j = 1:N
+  q = pi*(2*(j-1)/N - 1);
+  k = tan(0.5*q);
+  w = exp(-1.0i*q);
+  #dZ = r*(1./(w - a) - 1./(w - conj(a)));
+  # poles
+  p1 = -1.i*(cot(0.5*(q-a1)) - i);
+  p2 = -1.i*(cot(0.5*(q-a2)) - i);
+  p3 = -1.i*(cot(0.5*(q-b1)) - i);
+  p4 = -1.i*(cot(0.5*(q-b2)) - i);
+  p5 = cot(0.5*(q-w1)) - 1.i;
+  p6 = cot(0.5*(q-w2)) - 1.i;
+
+  #p1 = 1./sqrt(tan(0.5*(q-a1)));  
+  #p2 = 1./sqrt(tan(0.5*(q-a2)));  
+  #p3 = 1./sqrt(tan(0.5*(q-b1)));  
+  #p4 = 1./sqrt(tan(0.5*(q-b2))); 
+  # square root cuts:
+  s1 = 1./(sqrt(-1.i*cot(0.5*(q-a1))).*sqrt(-1.i*cot(0.5*(q-b1))));
+  s2 = 1./(sqrt(-1.i*cot(0.5*(q-a2))).*sqrt(-1.i*cot(0.5*(q-b2))));
+  # square root cuts side-ways
+  s3 = 1./(sqrt(cot(0.5*(q-a1+0.5*pi))).*sqrt(cot(0.5*(q-b1+0.5*pi))));
+  s4 = 1./(sqrt(cot(0.5*(q-a2+0.5*pi))).*sqrt(cot(0.5*(q-b2+0.5*pi))));
+
+
+  # dipoles
+  d1 =  (p1 - p3);
+  d2 =  (p2 - p4);
+
+  # just poles
+  dZ = s0 + rZ*(cot(0.5*(q - w1)) - 1.i) + rZ*(cot(0.5*(q - w2)) - 1.i);
+
+  #
+  #dZ = (s0 + rZ*(d1 + d2));   # dipoles
+  #dZ = s0 + r*(s1 + s2 + 0.*(s3+s4));    # square roots
+  #dZ = 1. + A*w;
+  #
+  #dZ = -1.0I*exp(-1.0I*q);
+  R = 1./sqrt(dZ);
+  #dPhi = C*w.*r*(d1 + d2));
+  dPhi = C*w.*r*(s1 + s2);
+  #dPhi = C*w.*(r*((p1 - p3) + (p2 - p4)));
+  #Phi = C*(cot(0.5*(q-a1+0.5*pi)) - cot(0.5*(q - )));
+  V = i*dPhi/dZ;
+  #V = C*r*((p1-p2) + (p3-p4));
+  
+  #V = -1.i*C*(0.0*w + 0.50*w.^3);
+  fprintf(fh, "%.16e\t", q);
+  fprintf(fh, "%.16e\t%.16e\t", real(R), imag(R));
+  fprintf(fh, "%.16e\t%.16e\n", real(V), imag(V));
+end
+fclose(fh);

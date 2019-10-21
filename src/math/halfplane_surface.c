@@ -17,6 +17,8 @@ void ffluid_math_clear_surface() {
 void ffluid_math_get_r0(data_ptr in) {
 }
 
+void ffluid_math_get_surface_variables_RV(data_ptr in, data_ptr out) {
+}
 void ffluid_math_get_surface_variables(data_ptr in, data_ptr out) {
   /* auxiliary variable S = z_u u_q is introduced */
   unsigned long 	N = in->N;
@@ -57,7 +59,8 @@ void ffluid_math_get_surface_variables(data_ptr in, data_ptr out) {
   memcpy(out->V, AuxLocal.X[1], N*sizeof(long_complex_t));
 }
 
-void ffluid_math_get_hamiltonian(data_ptr in, long_double_t *hamiltonian) {
+
+void ffluid_math_get_hamiltonian(data_ptr in, long_double_t *hamiltonian, long_double_t *surf_energy) {
   /* get hamiltonian (constant of motion) */
   unsigned long N = in->N;
 
@@ -71,6 +74,14 @@ void ffluid_math_get_hamiltonian(data_ptr in, long_double_t *hamiltonian) {
   for (long int j = N/2-1; j > -1; j--) {
     *hamiltonian += AuxLocal.Y[0][j]*conjl(AuxLocal.Y[0][j])/( j+1 );
   }
+}
+
+void ffluid_math_get_hamiltonian_RV(data_ptr in, long_double_t *hamiltonian, long_double_t *surf_energy) {
+}
+
+void ffluid_math_get_angular(data_ptr in, long_double_t *angular_m) {
+}
+void ffluid_math_get_angular_RV(data_ptr in, long_double_t *angular_m) {
 }
 
 void ffluid_math_set_zero_mode(data_ptr in, long_complex_t S0, long_complex_t *out) {
@@ -114,4 +125,5 @@ void ffluid_math_get_surface_spectrum(data_ptr in, data_ptr out) {
   memcpy(out->V, AuxLocal.Y[1], N*sizeof(long_complex_t));
 }
 
+void ffluid_math_get_volume_RV(data_ptr in, long_double_t *volume) {}
 

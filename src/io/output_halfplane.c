@@ -24,6 +24,8 @@ void ffluid_math_get_volume(data_ptr in, long_double_t *vol) {
   *vol = INFINITY;
 }
 
+void ffluid_write_full_data(data_ptr inZPh, data_ptr inRV, char *fname) {}
+void ffluid_write_full_spectrum(data_ptr inRV, data_ptr inZPh, char *fname) {}
 void ffluid_write_spectrum(data_ptr in, char *fname) {
   unsigned long N = in->N;
   char full_path[160];

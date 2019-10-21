@@ -20,6 +20,7 @@
   typedef fftwl_complex	long_complex_t;
   #define PI 	acosl(-1.0)
 #endif
+#define FFLAG	1
 
 typedef struct stepping_parameters {
   unsigned long nsteps, cur_step, dmp_cnt;
@@ -31,9 +32,13 @@ typedef struct data_array {
   unsigned long		N;
   long_complex_t	*R, *V;
   long_complex_t	*u, *du;
+  long_complex_t	z0, beta;
   long_double_t		*q;
   long_double_t		q0, u0, l;
-  long_double_t		Volume, Hamiltonian;
+  long_double_t		Volume;
+  long_double_t		Hamiltonian;
+  long_double_t		SurfaceEnergy;
+  long_double_t		AngularM;
   __float128 		time;
 } sim_data, *data_ptr;
 
@@ -67,6 +72,7 @@ typedef struct fft_array {
 typedef struct control_parameters_array{
   data_ptr		DataPtrCurr, DataPtrPrev;
   evolve_params_ptr 	EvolvePtr;
+  long_double_t		Sigma;
   char 			run_name[80];
   char			res_name[80];
   char			data_path[80];
@@ -74,7 +80,7 @@ typedef struct control_parameters_array{
 
 /* Global Variable */ 
 extern sim_data		DataCurr, DataPrev;
-extern sim_data         DataSpectrum, DataSurface;
+extern sim_data         DataSpectrum, DataSpectrumZPh, DataSurface;
 extern control_params	Control;
 extern evolve_params	EvolveConfig;
 

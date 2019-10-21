@@ -3,6 +3,7 @@
 static sim_data SimLocal;
 static aux_data AuxLocal;
 static fft_list FFTLocal;
+static long_complex_t z[5], beta[5];
 
 void ffluid_alloc_equations() {
   ffluid_data_init_copy(&DataCurr, &SimLocal);
@@ -39,8 +40,9 @@ void ffluid_call_rhs(data_ptr in, data_ptr out) {
   fftwl_execute(FFTLocal.bp[0]);
   fftwl_execute(FFTLocal.bp[1]);
   for (unsigned long j = 0; j < N; j++) {
-    AuxLocal.X[2][j]= 2.0L*creall(in->V[j]*in->du[j]*conjl(in->R[j]))/N;
-    AuxLocal.X[3][j]= in->V[j]*conjl(in->V[j])/N;
+    AuxLocal.X[2][j]  =  2.0L*creall(in->V[j]*in->du[j]*conjl(in->R[j]*in->R[j]))/N;
+    AuxLocal.X[3][j]  =  in->V[j]*conjl(in->V[j])/N;
+    AuxLocal.X[3][j] +=  2.0L*Control.Sigma*(  in->R[j]*conjl(in->R[j]) + 2.0L*cimagl(AuxLocal.X[0][j]*conjl(in->R[j])))/N;
   }
   fftwl_execute(FFTLocal.fp[2]);
   fftwl_execute(FFTLocal.fp[3]);
@@ -55,14 +57,15 @@ void ffluid_call_rhs(data_ptr in, data_ptr out) {
   memset(AuxLocal.Y[3]+N/2, 0, N/2*sizeof(long_complex_t));
   memset(AuxLocal.Y[4]+N/2, 0, N/2*sizeof(long_complex_t));
   AuxLocal.Y[2][0] = 0.5L*AuxLocal.Y[2][0];
-  // compute the proper zero mode of the RHS for r_0
-  //printf("rhs_zero = %.12Le\n", rhs_zero);
-  // end
+  /* compute the proper zero mode of the equation: */
+  /* z_t = i U z_u                                 */
+  /* to plot the surface correctly                 */
+
   // derivative via memmove
   memmove(AuxLocal.Y[3], AuxLocal.Y[3]+1, (N-1)*sizeof(long_complex_t));
   for (unsigned long j = 0; j < N/2; j++) {
     // this is derivative wrt to u
-    //AuxLocal.Y[3][j] = -1.0IL*j*AuxLocal.Y[3][j]; 
+    // AuxLocal.Y[3][j] = -1.0IL*j*AuxLocal.Y[3][j]; 
     // this is derivative wrt to \xi (verified)
     AuxLocal.Y[3][j] = -1.0L*(j+1)*AuxLocal.Y[3][j];
     AuxLocal.Y[4][j] = -1.0IL*j*AuxLocal.Y[2][j];
@@ -74,8 +77,106 @@ void ffluid_call_rhs(data_ptr in, data_ptr out) {
     AuxLocal.X[2][j] += 0.5L*(b1U*w1 - b2U*w2);
   }
   for (long int j = 0; j < N; j++) {
-    AuxLocal.X[0][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[0][j] - AuxLocal.X[4][j]*in->R[j] + 1.0IL*AuxLocal.X[2][j]*in->R[j])/N;
-    AuxLocal.X[1][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j] - AuxLocal.X[3][j]*in->R[j])/N;
+    /* these are the evolution equations for S,V */
+    //AuxLocal.X[0][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[0][j] - AuxLocal.X[4][j]*in->R[j] + 1.0IL*AuxLocal.X[2][j]*in->R[j])/N;
+    //AuxLocal.X[1][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j] - AuxLocal.X[3][j]*in->R[j])/N;
+    /* this is the evolution equation for Q,V */
+    AuxLocal.X[0][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[0][j] - 0.5L*AuxLocal.X[4][j]*in->R[j] + 0.5IL*AuxLocal.X[2][j]*in->R[j])/N;
+    AuxLocal.X[1][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j] - AuxLocal.X[3][j]*in->R[j]*in->R[j])/N;
+    //AuxLocal.X[0][j] *= in->du[j];
+    //AuxLocal.X[1][j] *= in->du[j];
+  }
+  fftwl_execute(FFTLocal.fp[0]);
+  fftwl_execute(FFTLocal.fp[1]);
+  memset(AuxLocal.Y[0]+N/2, 0, N/2*sizeof(long_complex_t));
+  memset(AuxLocal.Y[1]+N/2, 0, N/2*sizeof(long_complex_t));
+  fftwl_execute(FFTLocal.bp[0]);
+  fftwl_execute(FFTLocal.bp[1]);
+  memcpy(out->R, AuxLocal.X[0], N*sizeof(long_complex_t));
+  memcpy(out->V, AuxLocal.X[1], N*sizeof(long_complex_t));
+    /*
+    out->Q[j] = 0.5IL*(2.L*AuxLocal.X[0][j]*AuxLocal.X[2][j]-AuxLocal.X[4][j]*in->Q[j]);
+    out->V[j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j]-in->Q[j]*in->Q[j]*AuxLocal.X[3][j]);
+    out->Q[j] = out->Q[j]*in->du[j];
+    out->V[j] = out->V[j]*in->du[j];
+    */
+  /*  
+  ffluid_write_array(out->R, N, "rhsR.txt");
+  ffluid_write_array(out->V, N, "rhsV.txt");
+  exit(0);
+  */
+}
+
+
+
+// experimental
+
+void ffluid_call_rhsX(data_ptr in, data_ptr out) {
+  unsigned long 	N = in->N;
+  long_complex_t	w1 = cexpl( 1.IL*in->u0 - 2.0L*atanhl(in->l));
+  long_complex_t	w2 = cexpl(-1.IL*in->u0 - 2.0L*atanhl(in->l));
+  long_complex_t	b1U = 0.0L, b2U = 0.0L;
+
+  if (in->l == 1.0L) {
+    w2 = 0.0L;
+    w1 = 0.0L;
+  }
+  memcpy(AuxLocal.X[0], in->R, N*sizeof(long_complex_t));
+  memcpy(AuxLocal.X[1], in->V, N*sizeof(long_complex_t));
+  fftwl_execute(FFTLocal.fp[0]); 
+  fftwl_execute(FFTLocal.fp[1]);
+  memset(AuxLocal.Y[0]+N/2, 0, N/2);
+  memset(AuxLocal.Y[1]+N/2, 0, N/2);
+
+  for (unsigned long j = 0; j < N/2; j++) {
+    AuxLocal.Y[0][j] = -1.IL*j*AuxLocal.Y[0][j]/N;
+    AuxLocal.Y[1][j] = -1.IL*j*AuxLocal.Y[1][j]/N;
+  }
+  fftwl_execute(FFTLocal.bp[0]);
+  fftwl_execute(FFTLocal.bp[1]);
+  for (unsigned long j = 0; j < N; j++) {
+    AuxLocal.X[2][j]= 2.0L*creall(in->V[j]*in->du[j]*conjl(in->R[j]*in->R[j]))/N;
+    AuxLocal.X[3][j]= (in->V[j]*conjl(in->V[j]) + 2.0L*Control.Sigma*(in->R[j]*conjl(in->R[j]) + 2.0L*cimagl(AuxLocal.X[0][j]*conjl(in->R[j]))))/N;
+  }
+  fftwl_execute(FFTLocal.fp[2]);
+  fftwl_execute(FFTLocal.fp[3]);
+  AuxLocal.Y[4][0] = 0.0L;
+  b1U = AuxLocal.Y[2][N/2+1];
+  b2U = AuxLocal.Y[2][N/2-1];
+  for (unsigned long j = 1; j < N/2 - 1; j++) {
+    b1U = b1U*w1 + AuxLocal.Y[2][N/2+1+j];
+    b2U = b2U*w2 + AuxLocal.Y[2][N/2-1-j];
+  }
+  memset(AuxLocal.Y[2]+N/2, 0, N/2*sizeof(long_complex_t));
+  memset(AuxLocal.Y[3]+N/2, 0, N/2*sizeof(long_complex_t));
+  memset(AuxLocal.Y[4]+N/2, 0, N/2*sizeof(long_complex_t));
+  AuxLocal.Y[2][0] = 0.5L*AuxLocal.Y[2][0];
+  /* compute the proper zero mode of the equation: */
+  /* z_t = i U z_u                                 */
+  /* to plot the surface correctly                 */
+
+  // derivative via memmove
+  // memmove(AuxLocal.Y[3], AuxLocal.Y[3]+1, (N-1)*sizeof(long_complex_t));
+  for (unsigned long j = 0; j < N/2; j++) {
+    // this is derivative wrt to u
+    // AuxLocal.Y[3][j] = -1.0IL*j*AuxLocal.Y[3][j]; 
+    // this is derivative wrt to \xi (unverified)
+    AuxLocal.Y[3][j] = -1.0L*(j+1)*AuxLocal.Y[3][j+1];
+    AuxLocal.Y[4][j] = -1.0IL*j*AuxLocal.Y[2][j];
+  }
+  fftwl_execute(FFTLocal.bp[2]);
+  fftwl_execute(FFTLocal.bp[3]);
+  fftwl_execute(FFTLocal.bp[4]);
+  for (unsigned long j = 0; j < N; j++) {
+    AuxLocal.X[2][j] += 0.5L*(b1U*w1 - b2U*w2);
+  }
+  for (long int j = 0; j < N; j++) {
+    /* these are the evolution equations for S,V */
+    //AuxLocal.X[0][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[0][j] - AuxLocal.X[4][j]*in->R[j] + 1.0IL*AuxLocal.X[2][j]*in->R[j])/N;
+    //AuxLocal.X[1][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j] - AuxLocal.X[3][j]*in->R[j])/N;
+    /* this is the evolution equation for Q,V */
+    AuxLocal.X[0][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[0][j] - 0.5L*AuxLocal.X[4][j]*in->R[j] + 0.5IL*AuxLocal.X[2][j]*in->R[j])/N;
+    AuxLocal.X[1][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j] - AuxLocal.X[3][j]*in->R[j]*in->R[j])/N;
     //AuxLocal.X[0][j] *= in->du[j];
     //AuxLocal.X[1][j] *= in->du[j];
   }
@@ -111,17 +212,247 @@ void ffluid_call_rhs(data_ptr in, data_ptr out) {
 
 
 
+// experimental by text
+// modified with phantom condition (modified doesn't work)
+// needs: verification
+//
+void ffluid_call_rhsXX(data_ptr in, data_ptr out) {
+  unsigned long 	N = in->N;
+  long_complex_t	w1 = cexpl( 1.IL*in->u0 - 2.0L*atanhl(in->l));
+  long_complex_t	w2 = cexpl(-1.IL*in->u0 - 2.0L*atanhl(in->l));
+  long_complex_t	b1U = 0.0L, b2U = 0.0L;
+  long_complex_t	v0;
+
+  if (in->l == 1.0L) {
+    w2 = 0.0L;
+    w1 = 0.0L;
+  }
+  memcpy(AuxLocal.X[0], in->R, N*sizeof(long_complex_t));
+  memcpy(AuxLocal.X[1], in->V, N*sizeof(long_complex_t));
+  fftwl_execute(FFTLocal.fp[0]); 
+  fftwl_execute(FFTLocal.fp[1]);
+  v0 = 0.IL*conjl(AuxLocal.Y[1][1])/N;
+  memset(AuxLocal.Y[0]+N/2, 0, N/2);
+  memset(AuxLocal.Y[1]+N/2, 0, N/2);
+
+  for (unsigned long j = 0; j < N/2; j++) {
+    AuxLocal.Y[0][j] = -1.IL*j*AuxLocal.Y[0][j]/N;
+    AuxLocal.Y[1][j] = -1.IL*j*AuxLocal.Y[1][j]/N;
+  }
+  fftwl_execute(FFTLocal.bp[0]);
+  fftwl_execute(FFTLocal.bp[1]);
+  for (unsigned long j = 0; j < N; j++) {
+    AuxLocal.X[2][j]= 2.0L*creall(in->V[j]*conjl(in->R[j]*in->R[j]) + 1.IL*v0*in->R[j]*in->R[j]*cexpl(1.IL*in->u[j]))/N;
+    //AuxLocal.X[3][j]= (in->V[j]*conjl(in->V[j]) + 2.0L*Control.Sigma*(in->R[j]*conjl(in->R[j]) + 2.0L*cimagl(AuxLocal.X[0][j]*conjl(in->R[j]))))/N;
+    AuxLocal.X[3][j]= (in->V[j]*conjl(in->V[j]) + 2.0L*Control.Sigma*(in->R[j]*conjl(in->R[j]) + 2.0L*cimagl(AuxLocal.X[0][j]*conjl(in->R[j]))))/N;
+  }
+  fftwl_execute(FFTLocal.fp[2]);
+  fftwl_execute(FFTLocal.fp[3]);
+  AuxLocal.Y[4][0] = 0.0L;
+  b1U = AuxLocal.Y[2][N/2+1];
+  b2U = AuxLocal.Y[2][N/2-1];
+  for (unsigned long j = 1; j < N/2 - 1; j++) {
+    b1U = b1U*w1 + AuxLocal.Y[2][N/2+1+j];
+    b2U = b2U*w2 + AuxLocal.Y[2][N/2-1-j];
+  }
+  memset(AuxLocal.Y[2]+N/2, 0, N/2*sizeof(long_complex_t));
+  memset(AuxLocal.Y[3]+N/2, 0, N/2*sizeof(long_complex_t));
+  memset(AuxLocal.Y[4]+N/2, 0, N/2*sizeof(long_complex_t));
+  AuxLocal.Y[2][0] = 0.5L*AuxLocal.Y[2][0];
+  /* compute the proper zero mode of the equation: */
+  /* z_t = i U z_u                                 */
+  /* to plot the surface correctly                 */
+
+  // derivative via memmove
+  // memmove(AuxLocal.Y[3], AuxLocal.Y[3]+1, (N-1)*sizeof(long_complex_t));
+  for (unsigned long j = 0; j < N/2; j++) {
+    // this is derivative wrt to u
+    AuxLocal.Y[3][j] = -1.0IL*j*AuxLocal.Y[3][j]; 
+    // this is derivative wrt to \xi (unverified)
+    //AuxLocal.Y[3][j] = -1.0L*(j+1)*AuxLocal.Y[3][j+1];
+    AuxLocal.Y[4][j] = -1.0IL*j*AuxLocal.Y[2][j];
+  }
+  fftwl_execute(FFTLocal.bp[2]);
+  fftwl_execute(FFTLocal.bp[3]);
+  fftwl_execute(FFTLocal.bp[4]);
+  for (unsigned long j = 0; j < N; j++) {
+    AuxLocal.X[2][j] += 0.5L*(b1U*w1 - b2U*w2);
+  }
+  for (long int j = 0; j < N; j++) {
+    /* these are the evolution equations for S,V */
+    //AuxLocal.X[0][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[0][j] - AuxLocal.X[4][j]*in->R[j] + 1.0IL*AuxLocal.X[2][j]*in->R[j])/N;
+    //AuxLocal.X[1][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j] - AuxLocal.X[3][j]*in->R[j])/N;
+    /* this is the evolution equation for Q,V */
+    AuxLocal.X[0][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[0][j] - 0.5L*AuxLocal.X[4][j]*in->R[j] + 0.5IL*AuxLocal.X[2][j]*in->R[j])/N;
+    AuxLocal.X[1][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j] - AuxLocal.X[3][j]*in->R[j]*in->R[j] + 1.IL*AuxLocal.X[2][j]*in->V[j])/N;
+    AuxLocal.X[1][j] += v0*in->R[j]*in->R[j]*cexpl(1.IL*in->u[j])*(1.0IL*AuxLocal.X[1][j] - in->V[j])/N;
+    //AuxLocal.X[0][j] *= in->du[j];
+    //AuxLocal.X[1][j] *= in->du[j];
+  }
+  fftwl_execute(FFTLocal.fp[0]);
+  fftwl_execute(FFTLocal.fp[1]);
+  memset(AuxLocal.Y[0]+N/2, 0, N/2*sizeof(long_complex_t));
+  memset(AuxLocal.Y[1]+N/2, 0, N/2*sizeof(long_complex_t));
+  fftwl_execute(FFTLocal.bp[0]);
+  fftwl_execute(FFTLocal.bp[1]);
+  memcpy(out->R, AuxLocal.X[0], N*sizeof(long_complex_t));
+  memcpy(out->V, AuxLocal.X[1], N*sizeof(long_complex_t));
+    /*
+    out->Q[j] = 0.5IL*(2.L*AuxLocal.X[0][j]*AuxLocal.X[2][j]-AuxLocal.X[4][j]*in->Q[j]);
+    out->V[j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j]-in->Q[j]*in->Q[j]*AuxLocal.X[3][j]);
+    out->Q[j] = out->Q[j]*in->du[j];
+    out->V[j] = out->V[j]*in->du[j];
+    */
+  /*  
+  ffluid_write_array(out->R, N, "rhsR.txt");
+  ffluid_write_array(out->V, N, "rhsV.txt");
+  exit(0);
+  */
+}
 
 
 
+//  ---- By the main_v06.pdf text---- //
+//
 
+void ffluid_call_rhsRV(data_ptr in, data_ptr out) {
+  unsigned long 	N = in->N;
+  long_complex_t	w1 = cexpl( 1.IL*in->u0 - 2.0L*atanhl(in->l));
+  long_complex_t	w2 = cexpl(-1.IL*in->u0 - 2.0L*atanhl(in->l));
+  long_complex_t	b1U = 0.0L, b2U = 0.0L;
+  long_complex_t	barV;
 
+  if (in->l == 1.0L) {
+    w2 = 0.0L;
+    w1 = 0.0L;
+  }
+  memcpy(AuxLocal.X[0], in->R, N*sizeof(long_complex_t));
+  memcpy(AuxLocal.X[1], in->V, N*sizeof(long_complex_t));
+  fftwl_execute(FFTLocal.fp[0]); 
+  fftwl_execute(FFTLocal.fp[1]);
+  barV = AuxLocal.Y[1][0]/N;  // < V >
+  memset(AuxLocal.Y[0]+N/2, 0, (N/2-1)*sizeof(long_complex_t));
+  memset(AuxLocal.Y[1]+N/2, 0, N/2*sizeof(long_complex_t));
 
+  AuxLocal.Y[0][N-1] = 1.IL*AuxLocal.Y[0][N-1]/N;
+  for (unsigned long j = 0; j < N/2; j++) {
+    AuxLocal.Y[0][j] = -1.IL*j*AuxLocal.Y[0][j]/N;
+    AuxLocal.Y[1][j] = -1.IL*j*AuxLocal.Y[1][j]/N;
+  }
+  //printf("k =  2, Rk = %20.12Le\t%20.12Le\n", creall(AuxLocal.Y[0][2]), cimagl(AuxLocal.Y[0][2]));
+  //printf("k =  1, Rk = %20.12Le\t%20.12Le\n", creall(AuxLocal.Y[0][1]), cimagl(AuxLocal.Y[0][1]));
+  //printf("k =  0, Rk = %20.12Le\t%20.12Le\n", creall(AuxLocal.Y[0][0]), cimagl(AuxLocal.Y[0][0]));
+  //printf("k = -1, Rk = %20.12Le\t%20.12Le\n", creall(AuxLocal.Y[0][N-1]), cimagl(AuxLocal.Y[0][N-1]));
+  //printf("k = -2, Rk = %20.12Le\t%20.12Le\n", creall(AuxLocal.Y[0][N-2]), cimagl(AuxLocal.Y[0][N-2]));
+  //printf("k = -3, Rk = %20.12Le\t%20.12Le\n", creall(AuxLocal.Y[0][N-3]), cimagl(AuxLocal.Y[0][N-3]));
+  //exit(0);
+  //ffluid_write_surface(in, "test_arrays");
+  fftwl_execute(FFTLocal.bp[0]);
+  fftwl_execute(FFTLocal.bp[1]);
+  for (unsigned long j = 0; j < N; j++) {
+    //AuxLocal.X[3][j]= (in->V[j]*conjl(in->V[j]) + 2.0L*Control.Sigma*(in->R[j]*conjl(in->R[j]) + 2.0L*cimagl(AuxLocal.X[0][j]*conjl(in->R[j]))))/N;
+    //AuxLocal.X[3][j]= (in->V[j]*conjl(in->V[j]) + 2.0L*Control.Sigma*(in->R[j]*conjl(in->R[j]) + 2.0L*cimagl(AuxLocal.X[0][j]*conjl(in->R[j]))))/N;
+    AuxLocal.X[2][j]= 2.0L*creall((in->V[j] - barV)*conjl(in->R[j]))/N;
+    AuxLocal.X[3][j] = in->V[j]*conjl(in->V[j]) + 2.0L*Control.Sigma*(cabsl(in->R[j])*cimagl(AuxLocal.X[0][j]/in->R[j]));
+    AuxLocal.X[3][j] = AuxLocal.X[3][j]/N;
+  }
+  fftwl_execute(FFTLocal.fp[2]);
+  fftwl_execute(FFTLocal.fp[3]);
+  
+  AuxLocal.Y[4][0] = 0.0L;
+  b1U = AuxLocal.Y[2][N/2+1];
+  b2U = AuxLocal.Y[2][N/2-1];
+  for (unsigned long j = 1; j < N/2 - 1; j++) {
+    b1U = b1U*w1 + AuxLocal.Y[2][N/2+1+j];
+    b2U = b2U*w2 + AuxLocal.Y[2][N/2-1-j];
+  }
+  memset(AuxLocal.Y[2]+N/2, 0, N/2*sizeof(long_complex_t));
+  memset(AuxLocal.Y[3]+N/2, 0, N/2*sizeof(long_complex_t));
+  memset(AuxLocal.Y[4]+N/2, 0, N/2*sizeof(long_complex_t));
+  AuxLocal.Y[2][0] = 0.5L*AuxLocal.Y[2][0];
+  /* compute the proper zero mode of the equation: */
+  /* z_t = i U z_u                                 */
+  /* to plot the surface correctly                 */
 
+  // derivative via memmove
+  // memmove(AuxLocal.Y[3], AuxLocal.Y[3]+1, (N-1)*sizeof(long_complex_t));
+  for (unsigned long j = 0; j < N/2; j++) {
+    // this is derivative wrt to u
+    AuxLocal.Y[3][j] = -1.0IL*j*AuxLocal.Y[3][j];		// B_u
+    // this is derivative wrt to \xi (unverified)
+    //AuxLocal.Y[3][j] = -1.0L*(j+1)*AuxLocal.Y[3][j+1];
+    AuxLocal.Y[4][j] = -1.0IL*j*AuxLocal.Y[2][j];		// U_u
+  }
+  fftwl_execute(FFTLocal.bp[2]);				// U
+  fftwl_execute(FFTLocal.bp[3]);				// B_u
+  fftwl_execute(FFTLocal.bp[4]);				// U_u
+  for (unsigned long j = 0; j < N; j++) {
+    AuxLocal.X[2][j] += 0.5L*(b1U*w1 - b2U*w2);
+  }
+  for (long int j = 0; j < N; j++) {
+    /* these are the evolution equations for S,V */
+    //AuxLocal.X[0][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[0][j] - AuxLocal.X[4][j]*in->R[j] + 1.0IL*AuxLocal.X[2][j]*in->R[j])/N;
+    //AuxLocal.X[1][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j] - AuxLocal.X[3][j]*in->R[j])/N;
+    /* this is the evolution equation for Q,V */
+    //AuxLocal.X[0][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[0][j] - 0.5L*AuxLocal.X[4][j]*in->R[j] + 0.5IL*AuxLocal.X[2][j]*in->R[j])/N;
+    //AuxLocal.X[1][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j] - AuxLocal.X[3][j]*in->R[j]*in->R[j] + 1.IL*AuxLocal.X[2][j]*in->V[j])/N;
+    //AuxLocal.X[1][j] += v0*in->R[j]*in->R[j]*cexpl(1.IL*in->u[j])*(1.0IL*AuxLocal.X[1][j] - in->V[j])/N;
+    /* this is evolution equation for R,V */
+    AuxLocal.X[0][j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[0][j] - AuxLocal.X[4][j]*in->R[j])/N;
+    AuxLocal.X[1][j] = 1.0IL*((AuxLocal.X[2][j]+barV*in->R[j])*AuxLocal.X[1][j] - AuxLocal.X[3][j]*in->R[j])/N;
+    //AuxLocal.X[0][j] *= in->du[j];
+    //AuxLocal.X[1][j] *= in->du[j];
+  }
+  fftwl_execute(FFTLocal.fp[0]);
+  fftwl_execute(FFTLocal.fp[1]);
+  memset(AuxLocal.Y[0]+N/2, 0, (N/2-1)*sizeof(long_complex_t));
+  memset(AuxLocal.Y[1]+N/2, 0, N/2*sizeof(long_complex_t));
+  fftwl_execute(FFTLocal.bp[0]);
+  fftwl_execute(FFTLocal.bp[1]);
+  memcpy(out->R, AuxLocal.X[0], N*sizeof(long_complex_t));
+  memcpy(out->V, AuxLocal.X[1], N*sizeof(long_complex_t));
+    /*
+    out->Q[j] = 0.5IL*(2.L*AuxLocal.X[0][j]*AuxLocal.X[2][j]-AuxLocal.X[4][j]*in->Q[j]);
+    out->V[j] = 1.0IL*(AuxLocal.X[2][j]*AuxLocal.X[1][j]-in->Q[j]*in->Q[j]*AuxLocal.X[3][j]);
+    out->Q[j] = out->Q[j]*in->du[j];
+    out->V[j] = out->V[j]*in->du[j];
+    */
+  /*  
+  ffluid_write_array(out->R, N, "rhsR.txt");
+  ffluid_write_array(out->V, N, "rhsV.txt");
+  exit(0);
+  */
+}
 
+void ffluid_filter_high(data_ptr in, const int fflag) {
+  // fill the highest quarter of Fourier coefficients with zeros
+  unsigned long 	N = in->N;
+  long_complex_t	tmpR1, mult;
 
-
-
+  if (fflag == 1) {
+    memcpy(AuxLocal.X[0], in->R, N*sizeof(long_complex_t));
+    memcpy(AuxLocal.X[1], in->V, N*sizeof(long_complex_t));
+    fftwl_execute(FFTLocal.fp[0]); 
+    fftwl_execute(FFTLocal.fp[1]);
+    tmpR1 = AuxLocal.Y[0][N-1]/N;
+    for (int j = 0; j < N; j++) {
+      AuxLocal.Y[0][j] = AuxLocal.Y[0][j]/N; 
+      AuxLocal.Y[1][j] = AuxLocal.Y[1][j]/N;
+      if (j > 7*N/16) {
+        mult = expl(  - powl((16.L*j/7.L)/N , 4)); 
+        AuxLocal.Y[0][j] = mult*AuxLocal.Y[0][j]; 
+        AuxLocal.Y[1][j] = mult*AuxLocal.Y[1][j];
+      }
+    }
+    AuxLocal.Y[0][N-1] = tmpR1;
+    //memset(AuxLocal.Y[0]+7*N/16, 0, (9*N/16 - 1)*sizeof(long_complex_t));
+    //memset(AuxLocal.Y[1]+7*N/16, 0, (9*N/16    )*sizeof(long_complex_t));
+    fftwl_execute(FFTLocal.bp[0]); 
+    fftwl_execute(FFTLocal.bp[1]);
+    memcpy(in->R, AuxLocal.X[0], N*sizeof(long_complex_t));
+    memcpy(in->V, AuxLocal.X[1], N*sizeof(long_complex_t));
+  } 
+}
 
 
 

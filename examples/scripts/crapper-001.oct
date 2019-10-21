@@ -1,0 +1,52 @@
+#!/usr/bin/octave -qf
+# Initial data generation script 
+
+# data parameters
+N = 1024; 	# number of gridpoints
+
+# grid parameters:
+time = 0.0;
+u0   = 0.0;
+q0   = 0.0;
+l    = 1.0;
+# travelling wave parameters:
+k0    = 1;
+k     = 3;
+Sigma = 0.04;
+
+# nonlinear wave:
+Omega = 8.0;
+a = 0.4;
+A = 0.4;
+
+# prepare potential:
+u = pi*(2*(0:N-1)/N - 1);
+k = fftshift(-N/2:N/2-1);
+Pmsk = 0.5*(1-sign(k));
+Pmsk(1) = 0.5;
+
+Z  = A./cos(u - 1.i*a);
+dZ = Z.*tan(u - 1.i*a);
+dPhi = 1.i*Omega.*ifft(Pmsk.*fft(Z.*conj(dZ) + conj(Z).*dZ));
+  
+Q2  = exp(-1.i*k0*u)./dZ;
+Q   = sqrt(Q2);
+V = 1.i*Q2.*dPhi;
+
+
+
+
+fh = fopen("../config/crapper_001.txt","w");
+fprintf(fh, "# 1. q 2.-3. R 4.-5. V\n");
+fprintf(fh, "# Time = %.16e\tus = %.16e\tqs = %.16e\tl = %.16e\n\n", time, u0, q0, l);
+for j = 1:N
+  q = pi*(2*(j-1)/N - 1);
+  fprintf(fh, "%.16e\t", q);
+  fprintf(fh, "%.16e\t%.16e\t", real(Q(j)), imag(Q(j)));
+  fprintf(fh, "%.16e\t%.16e\n", real(V(j)), imag(V(j)));
+end
+fclose(fh);
+
+
+
+

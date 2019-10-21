@@ -21,13 +21,13 @@ void ffluid_runge_kutta_4(data_ptr in) {
   in->time += EvolveConfig.dt;
 
   ffluid_data_copy (in, &TmpLocal);
-  ffluid_call_rhs(&TmpLocal, &RHSLocal[0]);
+  ffluid_call_rhsXX(&TmpLocal, &RHSLocal[0]);
   ffluid_data_fma(one_half*EvolveConfig.dt, &RHSLocal[0], in, &TmpLocal);
-  ffluid_call_rhs(&TmpLocal, &RHSLocal[1]);
+  ffluid_call_rhsXX(&TmpLocal, &RHSLocal[1]);
   ffluid_data_fma(one_half*EvolveConfig.dt, &RHSLocal[1], in, &TmpLocal);
-  ffluid_call_rhs(&TmpLocal, &RHSLocal[2]);
+  ffluid_call_rhsXX(&TmpLocal, &RHSLocal[2]);
   ffluid_data_fma(EvolveConfig.dt, &RHSLocal[2], in, &TmpLocal);
-  ffluid_call_rhs(&TmpLocal, &RHSLocal[3]);
+  ffluid_call_rhsXX(&TmpLocal, &RHSLocal[3]);
 
   // TmpLocal <- k3 + 2*k2 + 2*k1 + k0
   ffluid_data_fma(two, &RHSLocal[2], &RHSLocal[3], &TmpLocal);
@@ -38,3 +38,26 @@ void ffluid_runge_kutta_4(data_ptr in) {
   ffluid_data_fma(one_sixth*EvolveConfig.dt, &TmpLocal, in, in);
 }
 
+void ffluid_runge_kutta_4_RV(data_ptr in) {
+  EvolveConfig.cur_step++;
+  in->time += EvolveConfig.dt;
+
+  ffluid_data_copy (in, &TmpLocal);
+  ffluid_call_rhsRV(&TmpLocal, &RHSLocal[0]);
+  ffluid_data_fma(one_half*EvolveConfig.dt, &RHSLocal[0], in, &TmpLocal);
+  ffluid_call_rhsRV(&TmpLocal, &RHSLocal[1]);
+  ffluid_data_fma(one_half*EvolveConfig.dt, &RHSLocal[1], in, &TmpLocal);
+  ffluid_call_rhsRV(&TmpLocal, &RHSLocal[2]);
+  ffluid_data_fma(EvolveConfig.dt, &RHSLocal[2], in, &TmpLocal);
+  ffluid_call_rhsRV(&TmpLocal, &RHSLocal[3]);
+
+  // TmpLocal <- k3 + 2*k2 + 2*k1 + k0
+  ffluid_data_fma(two, &RHSLocal[2], &RHSLocal[3], &TmpLocal);
+  ffluid_data_fma(two, &RHSLocal[1], &TmpLocal, &TmpLocal);
+  ffluid_data_fma(one, &RHSLocal[0], &TmpLocal, &TmpLocal);
+
+  // out <- in + dt/6 * TmpLocal
+  ffluid_data_fma(one_sixth*EvolveConfig.dt, &TmpLocal, in, in);
+  ffluid_filter_high(in, FFLAG);
+
+}
